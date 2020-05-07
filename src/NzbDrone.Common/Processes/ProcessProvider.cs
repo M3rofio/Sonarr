@@ -361,7 +361,7 @@ namespace NzbDrone.Common.Processes
             }
             if (OsInfo.IsOsx && path.EndsWith(".app", StringComparison.InvariantCultureIgnoreCase))
             {
-                return ("open", $"--args {path} {args}");
+                return ("/usr/bin/open", $"{path} --args {args}");
             }
 
             if (OsInfo.IsWindows && path.EndsWith(".bat", StringComparison.InvariantCultureIgnoreCase))
