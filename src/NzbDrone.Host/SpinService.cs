@@ -47,14 +47,22 @@ namespace NzbDrone.Host
 
                 _logger.Info("Attempting restart with arguments: {0} {1}", path, restartArgs);
 
-                if (OsInfo.IsOsx && installationFolder.EndsWith("/bin"))
+                if (OsInfo.IsOsx)
                 {
-                    // New MacOS App stores Sonarr binaries in Resources/bin and has a shim in MacOS
-                    // Run the shim instead
-                    var shim = Path.Combine(installationFolder, "../../MacOS/Sonarr");
-                    if (_diskProvider.FileExists(shim))
+                    if (installationFolder.EndsWith(".app/Contents/Resources/bin"))
                     {
-                        path = Path.GetFullPath(shim);
+                        // New MacOS App stores Sonarr binaries in Resources/bin and has a shim in MacOS
+                        // Run the app bundle instead of the binary
+                        path = Path.GetDirectoryName(installationFolder);
+                        path = Path.GetDirectoryName(path);
+                        path = Path.GetDirectoryName(path);
+                    }
+                    else if (installationFolder.EndsWith(".app/Contents/MacOS"))
+                    {
+                        // Old MacOS App stores Sonarr binaries in MacOS together with shell script
+                        // Run the app bundle instead
+                        path = Path.GetDirectoryName(installationFolder);
+                        path = Path.GetDirectoryName(path);
                     }
                 }
                 

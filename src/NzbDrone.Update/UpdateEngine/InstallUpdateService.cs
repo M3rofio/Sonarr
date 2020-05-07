@@ -128,7 +128,7 @@ namespace NzbDrone.Update.UpdateEngine
                             _diskProvider.MoveFile(shPath, shimPath);
                             _diskProvider.SetPermissions(shimPath, "0755", null, null);
                         }
-                        else if (installationFolder.EndsWith("/bin") && _diskProvider.FileExists(realShimPath))
+                        else if (installationFolder.EndsWith("/Resources/bin") && _diskProvider.FileExists(realShimPath))
                         {
                             // New MacOS App stores Sonarr binaries in Resources/bin and has a shim in MacOS
                             // Delete the shell script and shim in the downloaded update
