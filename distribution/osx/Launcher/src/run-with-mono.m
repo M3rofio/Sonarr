@@ -85,7 +85,7 @@ NSString *findMono(int major, int minor) {
 		return currentMono;
 	}
 
-	NSArray *probepaths = @[@"/usr/local/bin/mono", @"/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono", @"/opt/local/bin/mono"];
+	NSArray *probepaths = @[@"/usr/local/bin/mono", @"/Library/Frameworks/Mono.framework/Versions/Current/bin/mono", @"/opt/local/bin/mono"];
 	for(NSString* probepath in probepaths) {
 		if (D()) NSLog(@"Trying mono with: %@", probepath);
 		if (isValidMono(probepath, major, minor)) {
@@ -154,15 +154,46 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 		return 1;
 	}
 
-	if (D()) NSLog(@"Running %@ %@", currentMono, assemblyPath);
+	// Setup Sonarr dylib fallback loading
+	NSString * dylibPath = assemblyPath.stringByDeletingLastPathComponent;
+
+	// Update the PATH to use the specified mono version
+	if ([currentMono hasPrefix:@"/"])
+	{
+		NSString * curMonoBinDir = currentMono.stringByDeletingLastPathComponent;
+		NSString * curMonoDir = curMonoBinDir.stringByDeletingLastPathComponent;
+		NSString * curMonoLibDir = [NSString pathWithComponents:@[curMonoDir, @"lib"]];
+		
+		NSString * curEnvPath = [NSString stringWithUTF8String:getenv("PATH")];
+		NSString * newEnvPath = [NSString stringWithFormat:@"%@:%@", curMonoBinDir, curEnvPath];
+		setenv("PATH", newEnvPath.UTF8String, 1);
+		dylibPath = [NSString stringWithFormat:@"%@:%@", dylibPath, curMonoLibDir];
+
+		NSLog(@"Added %@ to PATH", curMonoBinDir);
+	}
+
+	// Setup libsqlite?
+	/*	if [[ -f '/opt/local/lib/libsqlite3.0.dylib' ]]; then
+			export DYLD_FALLBACK_LIBRARY_PATH="/opt/local/lib:$DYLD_FALLBACK_LIBRARY_PATH"
+		fi
+	*/
+	
+	dylibPath = [dylibPath stringByAppendingString:@":$HOME/lib:/usr/local/lib:/lib:/usr/lib"];
+
+	setenv("DYLD_FALLBACK_LIBRARY_PATH", dylibPath.UTF8String, 1);
+
+	if (D()) NSLog(@"Running %@ --debug %@", currentMono, assemblyPath);
 	
 	// Copy commandline arguments
 	NSMutableArray* arguments = [[NSMutableArray alloc] init];
-	[arguments addObject:[currentMono stringByAppendingString:procnamesuffix]];
+	// Disabled suffix for now coz it's confusing and not preserved on in-app restart
+	[arguments addObject:currentMono];
+	//[arguments addObject:[currentMono stringByAppendingString:procnamesuffix]];
+	[arguments addObject:@"--debug"];
 	[arguments addObjectsFromArray:[[NSProcessInfo processInfo] arguments]];
 	
 	// replace the executable-path with the assembly path
-	[arguments replaceObjectAtIndex:1 withObject:assemblyPath];
+	[arguments replaceObjectAtIndex:2 withObject:assemblyPath];
 
 	// Try switch to mono using execv
 	char * cPath = strdup([currentMono UTF8String]);
@@ -239,4 +270,3 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 	return runAssemblyWithMono(appName, procnamesuffix, assembly, major, minor);
 }
 @end
-

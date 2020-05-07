@@ -113,10 +113,34 @@ namespace NzbDrone.Update.UpdateEngine
                     _logger.Info("Copying new files to target folder");
                     _diskTransferService.MirrorFolder(_appFolderInfo.GetUpdatePackageFolder(), installationFolder);
 
-                    // Set executable flag on Sonarr app
+                    // Handle OSX package update and set executable flag on Sonarr app
                     if (OsInfo.IsOsx)
                     {
-                        _diskProvider.SetPermissions(Path.Combine(installationFolder, "Sonarr"), "0755", null, null);
+                        var shimPath = Path.Combine(installationFolder, "Sonarr");
+                        var shPath = Path.Combine(installationFolder, "Sonarr.sh");
+                        var realShimPath = Path.Combine(installationFolder, "../../MacOS/Sonarr");
+
+                        if (installationFolder.EndsWith("/MacOS"))
+                        {
+                            // Old MacOS App stores Sonarr binaries in MacOS together with shell script
+                            // Delete the shim and rename the shell script, ensure the shell script is executable
+                            _diskProvider.DeleteFile(shimPath);
+                            _diskProvider.MoveFile(shPath, shimPath);
+                            _diskProvider.SetPermissions(shimPath, "0755", null, null);
+                        }
+                        else if (installationFolder.EndsWith("/bin") && _diskProvider.FileExists(realShimPath))
+                        {
+                            // New MacOS App stores Sonarr binaries in Resources/bin and has a shim in MacOS
+                            // Delete the shell script and shim in the downloaded update
+                            _diskProvider.DeleteFile(shimPath);
+                            _diskProvider.DeleteFile(shPath);
+                        }
+                        else
+                        {
+                            // Probably a custom install, preserve both shim and shell script and make them executable
+                            _diskProvider.SetPermissions(shimPath, "0755", null, null);
+                            _diskProvider.SetPermissions(shPath, "0755", null, null);
+                        }
                     }
                 }
                 catch (Exception e)
