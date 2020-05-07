@@ -98,35 +98,43 @@ NSString *findMono(int major, int minor) {
 	return nil;
 }
 
+@implementation RunWithMono
+
++ (void) openDownloadLink:(NSButton*)button {
+	if (D()) NSLog(@"Clicked Download");
+	runCommand(@"/usr/bin/open", @[DOWNLOAD_URL]);
+}
+
 // Shows the download dialog, prompting to download Mono
-void showDownloadMonoDialog(NSString *appName, int major, int minor) {
++ (bool) showDownloadMonoDialog:(NSString *)appName major:(int)major minor:(int)minor {
 	NSAlert *alert = [[NSAlert alloc] init];
+
 	[alert setInformativeText:[NSString stringWithFormat:VERSION_MSG, appName, major, minor]];
 	[alert setMessageText:[NSString stringWithFormat:VERSION_TITLE, appName]];
 	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:@"Retry"];
 	[alert addButtonWithTitle:@"Download"];
+
+	NSButton *downloadButton = [[alert buttons] objectAtIndex:2];
+
+	[downloadButton setTarget:self];
+	[downloadButton setAction:@selector(openDownloadLink:)];
+
 	NSModalResponse btn = [alert runModal];
-	if (btn == NSAlertSecondButtonReturn) {
-		if (D()) NSLog(@"Clicked download");
-		runCommand(@"/usr/bin/open", @[DOWNLOAD_URL]);
-		//[[UIApplication sharedApplication] openURL:[NSURL URLWithString:DOWNLOAD_URL] options:@{} completionHandler:nil];
+	if (btn == NSAlertFirstButtonReturn) {
+		if (D()) NSLog(@"Clicked Cancel");
+		return true;
 	}
-}
+	else if (btn == NSAlertSecondButtonReturn) {
+		if (D()) NSLog(@"Clicked Retry");
+		return false;
+	}
 
-// Helper method to copy from source to target
-void copyStream(NSFileHandle *source, NSFileHandle* target) {
- 	NSData *data;
-    do
-    {
-        data = [source availableData];
-        //NSLog(@"Read some data %d", source.fileDescriptor);
-        [target writeData: data];
-
-    } while ([data length] > 0);
+	return true;
 }
 
 // Top-level method, finds Mono with an appropriate version and launches the assembly
-int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *assembly, int major, int minor) {
++ (int) runAssemblyWithMono: (NSString *)appName procnamesuffix:(NSString *)procnamesuffix assembly:(NSString *)assembly major:(int) major minor:(int) minor {
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 
 	NSString *entryFolder = [[NSBundle mainBundle] resourcePath];
@@ -148,14 +156,17 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 	}
 
 	NSString *currentMono = findMono(major, minor);
-	if (currentMono == nil) {
+	
+	while (currentMono == nil) {
 		NSLog(@"No valid mono found!");
-		showDownloadMonoDialog(appName, major, minor);
-		return 1;
+		bool close = [self showDownloadMonoDialog:appName major:major minor:minor];
+		if (close)
+			return 1;
+		currentMono = findMono(major, minor);
 	}
 
 	// Setup Sonarr dylib fallback loading
-	NSString * dylibPath = assemblyPath.stringByDeletingLastPathComponent;
+	NSMutableArray * dylibPath = [NSMutableArray arrayWithObjects:assemblyPath.stringByDeletingLastPathComponent, nil];
 
 	// Update the PATH to use the specified mono version
 	if ([currentMono hasPrefix:@"/"])
@@ -167,7 +178,8 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 		NSString * curEnvPath = [NSString stringWithUTF8String:getenv("PATH")];
 		NSString * newEnvPath = [NSString stringWithFormat:@"%@:%@", curMonoBinDir, curEnvPath];
 		setenv("PATH", newEnvPath.UTF8String, 1);
-		dylibPath = [NSString stringWithFormat:@"%@:%@", dylibPath, curMonoLibDir];
+
+		[dylibPath addObject:curMonoLibDir];
 
 		NSLog(@"Added %@ to PATH", curMonoBinDir);
 	}
@@ -178,9 +190,9 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 		fi
 	*/
 	
-	dylibPath = [dylibPath stringByAppendingString:@":$HOME/lib:/usr/local/lib:/lib:/usr/lib"];
+	[dylibPath addObjectsFromArray:@[@"$HOME/lib", @"/usr/local/lib", @"/lib", @"/usr/lib"]];
 
-	setenv("DYLD_FALLBACK_LIBRARY_PATH", dylibPath.UTF8String, 1);
+	setenv("DYLD_FALLBACK_LIBRARY_PATH", [dylibPath componentsJoinedByString:@":"].UTF8String, 1);
 
 	if (D()) NSLog(@"Running %@ --debug %@", currentMono, assemblyPath);
 	
@@ -206,67 +218,15 @@ int runAssemblyWithMono(NSString *appName, NSString *procnamesuffix, NSString *a
 	int ret = execv(cPath, cArgs);
 	if (ret != 0)
 		NSLog(@"Failed execv with errno @d", errno);
-	// execv failed, cleanup and run it normally
+	// execv failed, cleanup
 	pArgNext = cArgs;
 	for (NSString *s in arguments) {
 		free(*pArgNext++);
 	}
 	free(cArgs);
 	free(cPath);
-    
-	// run it normally
-	NSTask *task = [[NSTask alloc] init];
-	task.launchPath = currentMono;
-	task.arguments = arguments;
 
-	// Setup forwarding of stdout
-	NSPipe *stdout_pipe = [NSPipe pipe];
-	NSPipe *stderr_pipe = [NSPipe pipe];
-	NSPipe *stdin_pipe = [NSPipe pipe];
-
-    [task setStandardOutput:stdout_pipe];
-    [task setStandardError:stderr_pipe];
-    [task setStandardInput:stdin_pipe];
-
-    NSFileHandle *stdout_source = [stdout_pipe fileHandleForReading];
-    NSFileHandle *stderr_source = [stderr_pipe fileHandleForReading];
-    NSFileHandle *stdin_target = [stdin_pipe fileHandleForWriting];
-
-    NSFileHandle *stdout_target = [NSFileHandle fileHandleWithStandardOutput];
-    NSFileHandle *stderr_target = [NSFileHandle fileHandleWithStandardError];
-    NSFileHandle *stdin_source = [NSFileHandle fileHandleWithStandardInput];
-
-	[task launch];
-
-	if (D()) NSLog(@"Setting up stream forwards");
-	dispatch_queue_t bgQueue1 = dispatch_queue_create("bgQueue1", NULL);
-	dispatch_async(bgQueue1, ^{
-		copyStream(stdin_source, stdin_target);
-		[stdin_source closeFile];
-		[stdin_target closeFile];
-	});
-	dispatch_queue_t bgQueue2 = dispatch_queue_create("bgQueue2", NULL);
-	dispatch_async(bgQueue2, ^{
-		copyStream(stdout_source,  stdout_target);
-		[stdout_source closeFile];
-		[stdout_target closeFile];
-	});
-	dispatch_queue_t bgQueue3 = dispatch_queue_create("bgQueue3", NULL);
-	dispatch_async(bgQueue3, ^{
-		copyStream(stderr_source, stderr_target);
-		[stderr_source closeFile];
-		[stderr_target closeFile];
-	});
-
-	if (D()) NSLog(@"Waiting for exit");
-	[task waitUntilExit];
-
-	if (D()) NSLog(@"Returning status code");
-	return [task terminationStatus];
+	return -1;
 }
 
-@implementation RunWithMono
-+ (int) runAssemblyWithMono:(NSString *)appName procnamesuffix:(NSString *)procnamesuffix assembly:(NSString *)assembly major:(int) major minor:(int) minor {
-	return runAssemblyWithMono(appName, procnamesuffix, assembly, major, minor);
-}
 @end
