@@ -316,6 +316,7 @@ PackageMacOSApp()
 
     echo "Removing Update Folder"
     rm -r $outputFolderMacOSApp/Sonarr.app/Contents/Resources/bin/Sonarr.Update
+    echo "# Do Not Edit\nPackageVersion=${BUILD_NUMBER}\nPackageAuthor=[Team Sonarr](https://sonarr.tv)\nReleaseVersion=${BUILD_NUMBER}\nUpdateMethod=$PackageUpdater\nBranch=${Branch:-master}" > $outputFolderMacOSApp/Sonarr.app/Contents/Resources/package_info
 
     ProgressEnd 'Creating macOS App Package'
 }
