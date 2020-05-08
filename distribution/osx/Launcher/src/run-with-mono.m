@@ -98,6 +98,19 @@ NSString *findMono(int major, int minor) {
 	return nil;
 }
 
+// Check Bundle for quarantine
+void checkBundle() {
+    		
+	NSString * const bundlePath = [[NSBundle mainBundle] bundlePath];
+	NSString * const attributes = runCommand(@"/usr/bin/xattr", @[@"-l", bundlePath]);
+	if (D()) NSLog(@"Attributes: %@", attributes);
+	if ([attributes containsString:@"com.apple.quarantine:"]) {
+		runCommand(@"/usr/bin/xattr", @[@"-dr", @"com.apple.quarantine", bundlePath]);
+		NSLog(@"Removed quarantine attribute from bundle");
+	}
+}
+
+
 @implementation RunWithMono
 
 + (void) openDownloadLink:(NSButton*)button {
@@ -154,6 +167,8 @@ NSString *findMono(int major, int minor) {
 		NSLog(@"Assembly file not found: %@", assemblyPath);
 		return 1;
 	}
+
+	checkBundle();
 
 	NSString *currentMono = findMono(major, minor);
 	

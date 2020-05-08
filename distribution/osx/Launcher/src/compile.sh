@@ -5,7 +5,9 @@
 
 if [ ! -d "../dist" ]; then mkdir ../dist; fi
 
-clang run-with-mono.m Launcher.m -fobjc-arc -fmodules -mmacosx-version-min=10.6 -o ../dist/Launcher
+clang PFMoveApplication.m -fno-objc-arc -fmodules -mmacosx-version-min=10.6 -c -o PFMoveApplication.o
+clang run-with-mono.m Launcher.m PFMoveApplication.o  -fobjc-arc -fmodules -mmacosx-version-min=10.6 -o ../dist/Launcher
+rm PFMoveApplication.o
 
 if [ "$1" == "install" ] && [ "$2" != "" ]; then
     echo "Installing to $2"
