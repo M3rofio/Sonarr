@@ -25,4 +25,4 @@ Compiling the Launcher
 You need an OSX installation with xcode
 Then run compile.sh in a terminal
 
-The generated bin/Sonarr and bin/Sonarr.Update are the stubs that run Sonarr.exe and Sonarr.Update.exe respectively.
+The generated dist/Launcher can be renamed to Sonarr and Sonarr.Update to serve as shims to run Sonarr.exe and Sonarr.Update.exe respectively.

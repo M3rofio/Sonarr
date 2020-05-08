@@ -3,7 +3,12 @@
 # -fmodules: enables modules so you can import with `@import AppKit;`
 # -mmacosx-version-min=10.6: support older OS X versions, this might increase the binary size
 
-if [ ! -d "../bin" ]; then mkdir ../bin; fi
+if [ ! -d "../dist" ]; then mkdir ../dist; fi
 
-clang run-with-mono.m Sonarr.m -fobjc-arc -fmodules -mmacosx-version-min=10.6 -o ../bin/Sonarr
-clang run-with-mono.m Sonarr.Update.m -fobjc-arc -fmodules -mmacosx-version-min=10.6 -o ../bin/Sonarr.Update
+clang run-with-mono.m Launcher.m -fobjc-arc -fmodules -mmacosx-version-min=10.6 -o ../dist/Launcher
+
+if [ "$1" == "install" ] && [ "$2" != "" ]; then
+    echo "Installing to $2"
+    cp ../dist/Launcher $2
+    chmod +x $2
+fi

@@ -275,11 +275,11 @@ PackageMacOS()
     dos2unix $outputFolderMacOS/Sonarr.sh
 
     echo "Adding Sonarr Launcher"
-    cp ./distribution/osx/Launcher/bin/Sonarr $outputFolderMacOS/
+    cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOS/Sonarr
     chmod +x $outputFolderMacOS/Sonarr
 
     echo "Adding Sonarr.Update Launcher"
-    cp ./distribution/osx/Launcher/bin/Sonarr.Update $outputFolderMacOS/Sonarr.Update/
+    cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOS/Sonarr.Update/Sonarr.Update
     chmod +x $outputFolderMacOS/Sonarr.Update/Sonarr.Update
 
     echo "Adding sqlite dylibs"
@@ -301,7 +301,7 @@ PackageMacOSApp()
     mkdir -p $outputFolderMacOSApp/Sonarr.app/Contents/MacOS
 
     echo "Adding Sonarr Launcher"
-    cp ./distribution/osx/Launcher/bin/Sonarr $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/
+    cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Sonarr
     chmod +x $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Sonarr
 
     echo "Copying Binaries"

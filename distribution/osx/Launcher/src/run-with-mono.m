@@ -165,8 +165,8 @@ NSString *findMono(int major, int minor) {
 		currentMono = findMono(major, minor);
 	}
 
-	// Setup Sonarr dylib fallback loading
-	NSMutableArray * dylibPath = [NSMutableArray arrayWithObjects:assemblyPath.stringByDeletingLastPathComponent, nil];
+	// Setup dylib fallback loading
+	NSMutableArray * dylibPath = [NSMutableArray arrayWithObject:assemblyPath.stringByDeletingLastPathComponent];
 
 	// Update the PATH to use the specified mono version
 	if ([currentMono hasPrefix:@"/"])
