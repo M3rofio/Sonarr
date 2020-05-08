@@ -117,29 +117,19 @@ namespace NzbDrone.Update.UpdateEngine
                     if (OsInfo.IsOsx)
                     {
                         var shimPath = Path.Combine(installationFolder, "Sonarr");
-                        var shPath = Path.Combine(installationFolder, "Sonarr.sh");
                         var realShimPath = Path.Combine(installationFolder, "../../MacOS/Sonarr");
 
-                        if (installationFolder.EndsWith("/MacOS"))
-                        {
-                            // Old MacOS App stores Sonarr binaries in MacOS together with shell script
-                            // Delete the shim and rename the shell script, ensure the shell script is executable
-                            _diskProvider.DeleteFile(shimPath);
-                            _diskProvider.MoveFile(shPath, shimPath);
-                            _diskProvider.SetPermissions(shimPath, "0755", null, null);
-                        }
-                        else if (installationFolder.EndsWith("/Resources/bin") && _diskProvider.FileExists(realShimPath))
+                        if (installationFolder.EndsWith("/Resources/bin") && _diskProvider.FileExists(realShimPath))
                         {
                             // New MacOS App stores Sonarr binaries in Resources/bin and has a shim in MacOS
-                            // Delete the shell script and shim in the downloaded update
+                            // Delete the shim in the downloaded update
                             _diskProvider.DeleteFile(shimPath);
-                            _diskProvider.DeleteFile(shPath);
                         }
                         else
                         {
-                            // Probably a custom install, preserve both shim and shell script and make them executable
+                            // Old MacOS App stores Sonarr binaries in MacOS together with shell script
+                            // Make shim executable
                             _diskProvider.SetPermissions(shimPath, "0755", null, null);
-                            _diskProvider.SetPermissions(shPath, "0755", null, null);
                         }
                     }
                 }

@@ -270,10 +270,6 @@ PackageMacOS()
     echo "Copying Binaries"
     cp -r $outputFolderLinux/* $outputFolderMacOS
 
-    echo "Adding legacy Startup script"
-    cp ./distribution/Sonarr $outputFolderMacOS/Sonarr.sh
-    dos2unix $outputFolderMacOS/Sonarr.sh
-
     echo "Adding Sonarr Launcher"
     cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOS/Sonarr
     chmod +x $outputFolderMacOS/Sonarr
