@@ -271,14 +271,17 @@ PackageMacOS()
     cp -r $outputFolderLinux/* $outputFolderMacOS
 
     echo "Adding Sonarr Launcher"
-    ls -al $outputFolderMacOS
     cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOS/
+    mv $outputFolderMacOS/Sonarr.exe $outputFolderMacOS/Sonarr.exe.bak
     mv $outputFolderMacOS/Launcher $outputFolderMacOS/Sonarr
+    mv $outputFolderMacOS/Sonarr.exe.bak $outputFolderMacOS/Sonarr.exe
     chmod +x $outputFolderMacOS/Sonarr
 
     echo "Adding Sonarr.Update Launcher"
     cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOS/Sonarr.Update/
+    mv $outputFolderMacOS/Sonarr.Update/Sonarr.Update.exe $outputFolderMacOS/Sonarr.Update/Sonarr.Update.exe.bak
     mv $outputFolderMacOS/Sonarr.Update/Launcher $outputFolderMacOS/Sonarr.Update/Sonarr.Update
+    mv $outputFolderMacOS/Sonarr.Update/Sonarr.Update.exe.bak $outputFolderMacOS/Sonarr.Update/Sonarr.Update.exe
     chmod +x $outputFolderMacOS/Sonarr.Update/Sonarr.Update
 
     echo "Adding sqlite dylibs"
@@ -300,7 +303,8 @@ PackageMacOSApp()
     mkdir -p $outputFolderMacOSApp/Sonarr.app/Contents/MacOS
 
     echo "Adding Sonarr Launcher"
-    cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Sonarr
+    cp ./distribution/osx/Launcher/dist/Launcher $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/
+    mv $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Launcher $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Sonarr
     chmod +x $outputFolderMacOSApp/Sonarr.app/Contents/MacOS/Sonarr
 
     echo "Copying Binaries"
