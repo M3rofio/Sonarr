@@ -172,7 +172,7 @@ namespace NzbDrone.Integration.Test.DiagnosticsTests
             result.ErrorDiagnostics.First().StartLineNumber.Should().Be(2);
             result.ErrorDiagnostics.First().StartColumn.Should().Be(1);
             result.ErrorDiagnostics.First().Message.Should().StartWith("Object reference not set to an instance of an object");
-            result.ErrorDiagnostics.First().FullMessage.Should().StartWith("System.NullReferenceException: Object reference not set to an instance of an object.");
+            result.ErrorDiagnostics.First().FullMessage.Should().StartWith("System.NullReferenceException: Object reference not set to an instance of an object");
         }
 
         [Test]
@@ -193,7 +193,7 @@ namespace NzbDrone.Integration.Test.DiagnosticsTests
             result.ErrorDiagnostics.First().EndLineNumber.Should().Be(2);
             result.ErrorDiagnostics.First().EndColumn.Should().Be(38);
             result.ErrorDiagnostics.First().Message.Should().StartWith("Object reference not set to an instance of an object");
-            result.ErrorDiagnostics.First().FullMessage.Should().StartWith("System.NullReferenceException: Object reference not set to an instance of an object.");
+            result.ErrorDiagnostics.First().FullMessage.Should().StartWith("System.NullReferenceException: Object reference not set to an instance of an object");
         }
     }
 }
