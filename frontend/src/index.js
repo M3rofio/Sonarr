@@ -1,5 +1,5 @@
-/* eslint-disable-next-line no-undef */
-__webpack_public_path__ = `${window.Sonarr.urlBase}/`;
+import './preload';
+import './polyfills';
 
 import React from 'react';
 import { render } from 'react-dom';
