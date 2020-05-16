@@ -1,7 +1,7 @@
 import ReactMonacoEditor from 'react-monaco-editor';
 
 // All editor features -> 7.56 MiB
-import 'monaco-editor/esm/vs/editor/editor.all';
+// import 'monaco-editor/esm/vs/editor/editor.all';
 
 // Only the needed editor features -> 6.88 MiB
 import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands';
